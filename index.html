@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CC Coaching Analysis</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+    }
+    .wrap { max-width: 540px; width: 100%; }
+    .eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: #94a3b8;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    h1 {
+      font-size: 26px;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1.2;
+      margin-bottom: 6px;
+    }
+    .sub { color: #64748b; font-size: 14px; margin-bottom: 24px; }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 6px 20px rgba(0,0,0,0.05);
+    }
+    .field { margin-bottom: 20px; }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+    input[type="text"], select {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 15px;
+      color: #0f172a;
+      background: #fff;
+      transition: border-color 0.15s;
+    }
+    input[type="text"]:focus, select:focus {
+      outline: none;
+      border-color: #2563eb;
+    }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .drop-zone {
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 28px 20px;
+      text-align: center;
+      cursor: pointer;
+      background: #f8fafc;
+      transition: all 0.2s;
+    }
+    .drop-zone.over { border-color: #2563eb; background: #eff6ff; }
+    .drop-icon { font-size: 28px; margin-bottom: 10px; }
+    .drop-title { font-weight: 600; color: #374151; font-size: 15px; margin-bottom: 4px; }
+    .drop-sub { color: #94a3b8; font-size: 13px; }
+    .file-list { margin-top: 10px; display: flex; flex-direction: column; gap: 7px; }
+    .file-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 12px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+    }
+    .file-info { display: flex; align-items: center; gap: 10px; overflow: hidden; }
+    .file-name { font-size: 13px; font-weight: 500; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px; }
+    .file-size { font-size: 12px; color: #94a3b8; }
+    .remove { background: none; border: none; cursor: pointer; color: #cbd5e1; font-size: 20px; line-height: 1; padding: 0 4px; flex-shrink: 0; }
+    .btn {
+      width: 100%;
+      padding: 13px;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+      margin-top: 4px;
+    }
+    .btn:disabled { background: #e2e8f0; color: #94a3b8; cursor: not-allowed; }
+    .btn:hover:not(:disabled) { background: #1d4ed8; }
+    .hint { text-align: center; font-size: 12px; color: #94a3b8; margin-top: 10px; }
+    .processing { display: none; }
+    .processing.show { display: block; }
+    .step { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+    .step-icon {
+      width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: all 0.3s;
+    }
+    .step-icon.pending { background: #f1f5f9; border: 2px solid #e2e8f0; }
+    .step-icon.active { background: #eff6ff; border: 2px solid #2563eb; }
+    .step-icon.done { background: #2563eb; border: none; }
+    .step-label { font-size: 15px; color: #94a3b8; }
+    .step-label.active { color: #0f172a; font-weight: 600; }
+    .step-label.done { color: #0f172a; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #2563eb; animation: pulse 1.2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.4; transform:scale(0.75); } }
+    .success-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 16px; margin-bottom: 20px; }
+    .success-title { font-weight: 600; color: #15803d; font-size: 14px; margin-bottom: 4px; }
+    .success-sub { color: #166534; font-size: 13px; line-height: 1.5; }
+    .reset-btn { width: 100%; padding: 12px; background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; }
+    footer { text-align: center; color: #94a3b8; font-size: 12px; margin-top: 18px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Hunter Douglas Australia</div>
+  <h1>Contact Centre<br>Coaching Analysis</h1>
+  <p class="sub">Upload call recordings to receive a scored coaching report.</p>
+
+  <!-- Form -->
+  <div class="card" id="formCard">
+    <div class="field">
+      <label>Team member name</label>
+      <input type="text" id="agentName" placeholder="e.g. Sarah Jones">
+    </div>
+    <div class="row field">
+      <div>
+        <label>Brand</label>
+        <select id="brand">
+          <option value="">Select</option>
+          <option>VCB</option>
+          <option>Wynstan</option>
+        </select>
+      </div>
+      <div>
+        <label>Team</label>
+        <select id="team">
+          <option value="">Select</option>
+          <option>Lead Bookings</option>
+          <option>Customer Service</option>
+          <option>Installation Scheduling</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label id="fileLabel">Call recordings</label>
+      <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <div class="drop-icon">🎙</div>
+        <div class="drop-title">Drop recordings here</div>
+        <div class="drop-sub">or click to browse · MP3, WAV, M4A</div>
+        <input type="file" id="fileInput" multiple accept="audio/*,.mp3,.wav,.m4a,.aac" style="display:none">
+      </div>
+      <div class="file-list" id="fileList"></div>
+    </div>
+    <button class="btn" id="submitBtn" disabled>Analyse calls →</button>
+    <div class="hint" id="hint">Add team member name, brand, team, and at least one recording</div>
+  </div>
+
+  <!-- Processing -->
+  <div class="card processing" id="processingCard">
+    <div style="margin-bottom:28px">
+      <div class="eyebrow" id="proc-meta"></div>
+      <h2 style="font-size:22px;font-weight:700;color:#0f172a;margin:4px 0" id="proc-title">Analysing calls…</h2>
+      <div style="font-size:13px;color:#94a3b8" id="proc-sub"></div>
+    </div>
+    <div id="steps"></div>
+    <div id="successArea" style="display:none">
+      <div class="success-box">
+        <div class="success-title">Coaching report ready</div>
+        <div class="success-sub">Saved to Google Drive and formatted as PDF. A link has been sent to your email.</div>
+      </div>
+      <button class="reset-btn" onclick="resetForm()">Analyse another agent</button>
+    </div>
+  </div>
+
+  <footer>Reports saved automatically to Google Drive · Analysis takes 5–10 minutes</footer>
+</div>
+
+<script>
+  const WEBHOOK = 'https://hook.eu1.make.com/uhh2bd98vyisqeilxkgohqy489kghu8e';
+
+  const STEPS = [
+    { label: 'Files received', duration: 800 },
+    { label: 'Transcribing audio', duration: 3200 },
+    { label: 'Analysing with AI', duration: 2800 },
+    { label: 'Generating report', duration: 1600 },
+  ];
+
+  let files = [];
+
+  const $ = id => document.getElementById(id);
+  const fmt = b => b < 1048576 ? `${(b/1024).toFixed(0)} KB` : `${(b/1048576).toFixed(1)} MB`;
+
+  function addFiles(newFiles) {
+    const audio = Array.from(newFiles).filter(f => f.type.startsWith('audio/') || /\.(mp3|wav|m4a|aac|ogg|flac)$/i.test(f.name));
+    const names = new Set(files.map(f => f.name));
+    files = [...files, ...audio.filter(f => !names.has(f.name))];
+    renderFiles();
+  }
+
+  function renderFiles() {
+    const list = $('fileList');
+    list.innerHTML = files.map((f, i) => `
+      <div class="file-row">
+        <div class="file-info">
+          <span>🎵</span>
+          <div><div class="file-name">${f.name}</div><div class="file-size">${fmt(f.size)}</div></div>
+        </div>
+        <button class="remove" onclick="removeFile(${i})">×</button>
+      </div>`).join('');
+    $('fileLabel').textContent = files.length > 0 ? `Call recordings (${files.length} added)` : 'Call recordings';
+    validate();
+  }
+
+  function removeFile(i) { files.splice(i, 1); renderFiles(); }
+
+  function validate() {
+    const ok = $('agentName').value.trim() && $('brand').value && $('team').value && files.length > 0;
+    $('submitBtn').disabled = !ok;
+    $('submitBtn').textContent = files.length > 0 ? `Analyse ${files.length} call${files.length !== 1 ? 's' : ''} →` : 'Analyse calls →';
+    if (ok) $('hint').style.display = 'none';
+  }
+
+  $('agentName').addEventListener('input', validate);
+  $('brand').addEventListener('change', validate);
+  $('team').addEventListener('change', validate);
+  $('fileInput').addEventListener('change', e => addFiles(e.target.files));
+
+  const dz = $('dropZone');
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+  dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('over'); addFiles(e.dataTransfer.files); });
+
+  async function runSteps() {
+    const stepsEl = $('steps');
+    stepsEl.innerHTML = STEPS.map((s, i) => `
+      <div class="step" id="step-${i}">
+        <div class="step-icon pending" id="icon-${i}"><div style="width:7px;height:7px;border-radius:50%;background:#cbd5e1"></div></div>
+        <span class="step-label" id="label-${i}">${s.label}</span>
+      </div>`).join('');
+
+    for (let i = 0; i < STEPS.length; i++) {
+      $(`icon-${i}`).className = 'step-icon active';
+      $(`icon-${i}`).innerHTML = '<div class="dot"></div>';
+      $(`label-${i}`).className = 'step-label active';
+      $(`label-${i}`).textContent = STEPS[i].label + '…';
+      await new Promise(r => setTimeout(r, STEPS[i].duration));
+      $(`icon-${i}`).className = 'step-icon done';
+      $(`icon-${i}`).innerHTML = '<svg width="13" height="10" viewBox="0 0 13 10" fill="none"><path d="M1.5 5L5 8.5L11.5 1.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      $(`label-${i}`).className = 'step-label done';
+      $(`label-${i}`).textContent = STEPS[i].label;
+    }
+    $('proc-title').textContent = 'Report ready';
+    $('successArea').style.display = 'block';
+  }
+
+  $('submitBtn').addEventListener('click', async () => {
+    const agentName = $('agentName').value.trim();
+    const brand = $('brand').value;
+    const team = $('team').value;
+
+    $('formCard').style.display = 'none';
+    $('processingCard').classList.add('show');
+    $('proc-meta').textContent = `${brand} · ${team}`;
+    $('proc-sub').textContent = `${files.length} call${files.length !== 1 ? 's' : ''} · ${agentName}`;
+
+    const fd = new FormData();
+    fd.append('agentName', agentName);
+    fd.append('brand', brand);
+    fd.append('team', team);
+    files.forEach(f => fd.append('files[]', f));
+
+    fetch(WEBHOOK, { method: 'POST', body: fd }).catch(console.error);
+    runSteps();
+  });
+
+  function resetForm() {
+    files = [];
+    $('agentName').value = '';
+    $('brand').value = '';
+    $('team').value = '';
+    $('fileList').innerHTML = '';
+    $('steps').innerHTML = '';
+    $('successArea').style.display = 'none';
+    $('formCard').style.display = 'block';
+    $('processingCard').classList.remove('show');
+    $('hint').style.display = 'block';
+    validate();
+  }
+</script>
+</body>
+</html>
